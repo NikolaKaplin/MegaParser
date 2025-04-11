@@ -1,5 +1,7 @@
-console.log("Hello via Bun!");
-interface SortTable {
+import { getSmart } from "./sites/smart";
+
+console.log("Mega parser started");
+export interface SortTable {
   day: Date;
   net: string;
   address: string;
@@ -7,3 +9,13 @@ interface SortTable {
   sku: string;
   price: string;
 }
+
+async function StartMegaParser() {
+  try {
+    await getSmart();
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+StartMegaParser();

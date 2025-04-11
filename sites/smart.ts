@@ -19,12 +19,12 @@ const csvWriter = createObjectCsvWriter({
     { id: "sku", title: "SKU" },
     { id: "price", title: "Price" },
   ],
+  encoding: "utf8",
 });
 
 let running = true;
 
-async function getSmart() {
-  // Обработчик события для выхода по Ctrl + C
+export async function getSmart() {
   process.on("SIGINT", () => {
     console.log(chalk.red("\nInterrupted! Exiting..."));
     running = false;
@@ -64,7 +64,6 @@ async function getSmart() {
         group.Наименование !== "ВИНО"
     );
 
-    // Обновляем прогресс для региона
     regionBar.update(i + 1);
 
     console.clear();
@@ -75,8 +74,6 @@ async function getSmart() {
         } groups.`
       )
     );
-
-    const groupBar = progressBar.create(filteredGroups.length, 0);
 
     for (let j = 0; j < filteredGroups.length && running; j++) {
       const optionsFromProducts = {
@@ -95,6 +92,7 @@ async function getSmart() {
           ЗначенияФильтров: [],
         },
       };
+
       const response = await axios.request(optionsFromProducts);
       const products = response.data.Data[0].Data;
 
@@ -102,21 +100,15 @@ async function getSmart() {
         transformedProducts.push({
           day: new Date(),
           net: "Smart",
-          address: product.Магазин,
+          address: regions[i].Наименование,
           category: filteredGroups[j].Наименование,
           sku: product.Наименование,
           price: product.Цена,
         });
       });
-
-      groupBar.update(j + 1);
     }
-
-    // Остановка прогресса для группы в этом регионе
-    groupBar.stop();
   }
 
-  // Остановка основного прогресса после завершения
   regionBar.stop();
   console.clear();
 
@@ -128,7 +120,3 @@ async function getSmart() {
     console.log(chalk.yellow("Process was terminated before completing."));
   }
 }
-
-getSmart().catch((error) => {
-  console.error(chalk.red("An error occurred:"), error.message);
-});
