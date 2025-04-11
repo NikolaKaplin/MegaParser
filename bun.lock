@@ -4,6 +4,7 @@
     "": {
       "name": "js_ts",
       "dependencies": {
+        "@opentf/cli-styles": "^0.15.0",
         "axios": "^1.8.4",
         "chalk": "^5.4.1",
         "cheerio": "^1.0.0",
@@ -11,6 +12,7 @@
         "csv-writer": "^1.6.0",
         "ora": "^8.2.0",
         "p-limit": "^6.2.0",
+        "tsc": "^2.0.4",
         "tsx": "^4.19.3",
       },
       "devDependencies": {
@@ -73,6 +75,10 @@
     "@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.25.2", "", { "os": "win32", "cpu": "ia32" }, "sha512-WRJgsz9un0nqZJ4MfhabxaD9Ft8KioqU3JMinOTvobbX6MOSUigSBlogP8QB3uxpJDsFS6yN+3FDBdqE5lg9kg=="],
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.25.2", "", { "os": "win32", "cpu": "x64" }, "sha512-kM3HKb16VIXZyIeVrM1ygYmZBKybX8N4p754bw390wGO3Tf2j4L2/WYL+4suWujpgf6GBYs3jv7TyUivdd05JA=="],
+
+    "@opentf/cli-styles": ["@opentf/cli-styles@0.15.0", "", { "dependencies": { "@opentf/std": "^0.3.0" } }, "sha512-7eETZJLNCyOq6sX4W5up8l1IdTu0sf1qDdsBJ2KHx9u4rh3drFmMgF1ZoZ92K9oCiqzKAGqpCCjuasnRWbNLOw=="],
+
+    "@opentf/std": ["@opentf/std@0.3.0", "", {}, "sha512-8Dtm0NqgoRi30FAUORo74SEruw2t2YlICxUy9nRpozzpbORCu4drpcAUq4stLsUY0bGHmFSZfZGpdA3wFamcwg=="],
 
     "@types/bun": ["@types/bun@1.2.9", "", { "dependencies": { "bun-types": "1.2.9" } }, "sha512-epShhLGQYc4Bv/aceHbmBhOz1XgUnuTZgcxjxk+WXwNyDXavv5QHD1QEFV0FwbTSQtNq6g4ZcV6y0vZakTjswg=="],
 
@@ -217,6 +223,8 @@
     "string-width": ["string-width@4.2.3", "", { "dependencies": { "emoji-regex": "^8.0.0", "is-fullwidth-code-point": "^3.0.0", "strip-ansi": "^6.0.1" } }, "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g=="],
 
     "strip-ansi": ["strip-ansi@7.1.0", "", { "dependencies": { "ansi-regex": "^6.0.1" } }, "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ=="],
+
+    "tsc": ["tsc@2.0.4", "", { "bin": { "tsc": "bin/tsc" } }, "sha512-fzoSieZI5KKJVBYGvwbVZs/J5za84f2lSTLPYf6AGiIf43tZ3GNrI1QzTLcjtyDDP4aLxd46RTZq1nQxe7+k5Q=="],
 
     "tsx": ["tsx@4.19.3", "", { "dependencies": { "esbuild": "~0.25.0", "get-tsconfig": "^4.7.5" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "bin": { "tsx": "dist/cli.mjs" } }, "sha512-4H8vUNGNjQ4V2EOoGw005+c+dGuPSnhpPBPHBtsZdGZBk/iJb4kguGlPWaZTZ3q5nMtFOEsY0nRDlh9PJyd6SQ=="],
 

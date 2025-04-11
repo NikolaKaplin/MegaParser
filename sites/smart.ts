@@ -1,26 +1,13 @@
 import axios from "axios";
-import { createObjectCsvWriter } from "csv-writer";
 import { MultiBar } from "cli-progress";
 import ora from "ora";
 import chalk from "chalk";
+import { csvWriter } from "..";
 
 const regionsUrl =
   "https://smart.swnn.ru/WS/hs/exchange/getTerritoriesIndividuals/?fromSite";
 
 const groupsUrl = "https://smart.swnn.ru/WS/hs/exchange/getCatalogGroups/1/1/1";
-
-const csvWriter = createObjectCsvWriter({
-  path: "products.csv",
-  header: [
-    { id: "day", title: "Day" },
-    { id: "net", title: "Net" },
-    { id: "address", title: "Address" },
-    { id: "category", title: "Category" },
-    { id: "sku", title: "SKU" },
-    { id: "price", title: "Price" },
-  ],
-  encoding: "utf8",
-});
 
 let running = true;
 
@@ -39,7 +26,7 @@ export async function getSmart() {
 
   const progressBar = new MultiBar({
     format: `${chalk.cyan(
-      "Progress"
+      "Progress Smart magazine"
     )} | {bar} | {percentage}% | Region: {value}/{total}`,
     hideCursor: true,
     barCompleteChar: "\u2588",
@@ -98,8 +85,8 @@ export async function getSmart() {
 
       products.forEach((product) => {
         transformedProducts.push({
-          day: new Date(),
-          net: "Smart",
+          date: new Date().toISOString(),
+          network: "Smart",
           address: regions[i].Наименование,
           category: filteredGroups[j].Наименование,
           sku: product.Наименование,
