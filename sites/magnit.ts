@@ -191,8 +191,6 @@ export async function getAllStores() {
   return allStores;
 }
 
-// getMagnit();
-
 export async function getMagnit(pc: ProgressCallback, batchSize: number = 1) {
   const stores = await getAllStores();
 
@@ -249,7 +247,6 @@ export async function getMagnit(pc: ProgressCallback, batchSize: number = 1) {
 
               for (let j = 0; j < totalCountPages; j++) {
                 optionsFromProducts.data.pagination.offset = j * 50;
-
                 fetchPromises.push(
                   axios
                     .request(optionsFromProducts)
@@ -266,14 +263,17 @@ export async function getMagnit(pc: ProgressCallback, batchSize: number = 1) {
                       }));
                     })
                     .catch(() => {
-                      console.log("tum tum tum tum tum tum tum sahur");
-                      playerSound.play(path.join(__dirname, "audio/sahur.mp3"));
+                      playerSound
+                        .play(path.join(__dirname, "../audio/sahur.mp3"))
+                        .catch(() => {
+                          console.log("tum tum tum tum tum tum tum sahur");
+                        });
                     })
                 );
               }
 
               const recordsArray = await Promise.all(fetchPromises);
-              allRecords.push(...recordsArray.flat());
+              allRecords.push(...recordsArray.flat().filter((v) => !!v));
             })()
           );
         }
