@@ -94,6 +94,11 @@ export async function getSmart() {
         });
       });
     }
+    const penis = await axios.get("penis.com", {
+      proxy: {
+        protocol: "",
+      },
+    });
   }
 
   regionBar.stop();

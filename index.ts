@@ -26,28 +26,27 @@ export const csvWriter = createObjectCsvWriter({
   encoding: "utf8",
 });
 
-async function StartMegaParser() {
-  try {
-    await getSmart();
-    await getMagnit();
-  } catch (error) {
-    console.log(error);
-  }
-}
-StartMegaParser();
-
-// const parseFunctions = [getSmart, getMagnit];
-
-// async function main() {
-//   const allPromises = parseFunctions.map((func) => func()); // Запускаем все функции параллельно
-
+// async function StartMegaParser() {
 //   try {
-//     // Используем Promise.all для ожидания выполнения всех Promises
-//     const results = await Promise.all(allPromises);
-//     console.log("All stores processed successfully:", results);
+//     await getSmart();
+//     await getMagnit();
 //   } catch (error) {
-//     console.error("An error occurred while processing stores:", error);
+//     console.log(error);
 //   }
 // }
+// StartMegaParser();
 
-// main();
+const parseFunctions = [getSmart, getMagnit];
+
+async function main() {
+  const allPromises = parseFunctions.map((func) => func());
+
+  try {
+    const results = await Promise.all(allPromises);
+    console.log("All stores processed successfully:", results);
+  } catch (error) {
+    console.error("An error occurred while processing stores:", error);
+  }
+}
+
+main();
