@@ -1,9 +1,7 @@
-import axios, { type AxiosProxyConfig, type AxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import { MultiBar } from "cli-progress";
-import chalk from "chalk";
-import { SocksProxyAgent } from "socks-proxy-agent";
-import { csvWriter } from "..";
-import fs from "fs/promises";
+import path from "path";
+import { csvWriter, playerSound, type ProgressCallback } from "..";
 const API_URL = "https://magnit.ru/webgate/v1/store-search/geo";
 // API не позволяет выудить все магазины разом, поэтому я решил разбить россию на 20 зон, думаю этого хватит чтобы вытащить все
 const COORDINATES = [
@@ -193,21 +191,22 @@ export async function getAllStores() {
   return allStores;
 }
 
-getMagnit();
+// getMagnit();
 
-export async function getMagnit(batchSize: number = 1) {
+export async function getMagnit(pc: ProgressCallback, batchSize: number = 1) {
   const stores = await getAllStores();
 
-  const progressBar = new MultiBar({
-    format: `Progress Magnit: | {bar} | {percentage}% | Processing store: {value}/{total}`,
-    hideCursor: true,
-    barCompleteChar: "\u2588",
-    barIncompleteChar: "\u2591",
-  });
+  // const progressBar = new MultiBar({
+  //   format: `Progress Magnit: | {bar} | {percentage}% | Processing store: {value}/{total}`,
+  //   hideCursor: true,
+  //   barCompleteChar: "\u2588",
+  //   barIncompleteChar: "\u2591",
+  // });
 
-  const storesCount = 10; // stores.length;
+  const storesCount = stores.length; // stores.length;
 
-  const storeBar = progressBar.create(storesCount, 0);
+  // const storeBar = progressBar.create(storesCount, 0);
+  pc({ task: storesCount });
 
   for (let i = 0; i < Math.ceil(storesCount / batchSize); i++) {
     const batchStart = Date.now();
@@ -266,9 +265,10 @@ export async function getMagnit(batchSize: number = 1) {
                         price: Math.floor(product.price),
                       }));
                     })
-                    .catch(() =>
-                      console.log("tum tum tum tum tum tum tum sahur")
-                    )
+                    .catch(() => {
+                      console.log("tum tum tum tum tum tum tum sahur");
+                      playerSound.play(path.join(__dirname, "audio/sahur.mp3"));
+                    })
                 );
               }
 
@@ -281,7 +281,8 @@ export async function getMagnit(batchSize: number = 1) {
         await Promise.all(categoryPromises);
 
         await csvWriter.writeRecords(allRecords);
-        storeBar.update(i + 1);
+        // storeBar.update(i + 1);
+        pc({ done: i + 1 });
       })
     );
     console.log(
@@ -289,7 +290,7 @@ export async function getMagnit(batchSize: number = 1) {
     );
   }
 
-  storeBar.stop();
+  // storeBar.stop();
 }
 
 // Последовательный долгий парсинг

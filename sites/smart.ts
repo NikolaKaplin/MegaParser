@@ -2,7 +2,7 @@ import axios from "axios";
 import { MultiBar } from "cli-progress";
 import ora from "ora";
 import chalk from "chalk";
-import { csvWriter } from "..";
+import { csvWriter, type ProgressCallback } from "..";
 
 const regionsUrl =
   "https://smart.swnn.ru/WS/hs/exchange/getTerritoriesIndividuals/?fromSite";
@@ -11,7 +11,7 @@ const groupsUrl = "https://smart.swnn.ru/WS/hs/exchange/getCatalogGroups/1/1/1";
 
 let running = true;
 
-export async function getSmart() {
+export async function getSmart(pc: ProgressCallback) {
   process.on("SIGINT", () => {
     console.log(chalk.red("\nInterrupted! Exiting..."));
     running = false;
@@ -24,16 +24,17 @@ export async function getSmart() {
 
   const transformedProducts = [];
 
-  const progressBar = new MultiBar({
-    format: `${chalk.cyan(
-      "Progress Smart magazine"
-    )} | {bar} | {percentage}% | Region: {value}/{total}`,
-    hideCursor: true,
-    barCompleteChar: "\u2588",
-    barIncompleteChar: "\u2591",
-  });
+  // const progressBar = new MultiBar({
+  //   format: `${chalk.cyan(
+  //     "Progress Smart magazine"
+  //   )} | {bar} | {percentage}% | Region: {value}/{total}`,
+  //   hideCursor: true,
+  //   barCompleteChar: "\u2588",
+  //   barIncompleteChar: "\u2591",
+  // });
 
-  const regionBar = progressBar.create(regions.length, 0);
+  // const regionBar = progressBar.create(regions.length, 0);
+  pc({ task: regions.length });
 
   for (let i = 0; i < regions.length && running; i++) {
     const optionsFromGroups = {
@@ -51,16 +52,17 @@ export async function getSmart() {
         group.Наименование !== "ВИНО"
     );
 
-    regionBar.update(i + 1);
+    // regionBar.update(i + 1);
+    pc({ done: i + 1 });
 
-    console.clear();
-    console.log(
-      chalk.yellow(
-        `Currently processing region ${i + 1}/${regions.length}. Found ${
-          filteredGroups.length
-        } groups.`
-      )
-    );
+    // console.clear();
+    // console.log(
+    //   chalk.yellow(
+    //     `Currently processing region ${i + 1}/${regions.length}. Found ${
+    //       filteredGroups.length
+    //     } groups.`
+    //   )
+    // );
 
     for (let j = 0; j < filteredGroups.length && running; j++) {
       const optionsFromProducts = {
@@ -94,15 +96,10 @@ export async function getSmart() {
         });
       });
     }
-    const penis = await axios.get("penis.com", {
-      proxy: {
-        protocol: "",
-      },
-    });
   }
 
-  regionBar.stop();
-  console.clear();
+  // regionBar.stop();
+  // console.clear();
 
   if (running) {
     console.log(chalk.green("All regions processed."));
