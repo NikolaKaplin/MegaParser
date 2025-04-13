@@ -1,11 +1,7 @@
 import { createObjectCsvWriter } from "csv-writer";
 import { getMagnit } from "./sites/magnit";
 import { getSmart } from "./sites/smart";
-import chalk from "chalk";
-import { MultiBar, SingleBar } from "cli-progress";
-import player from "sound-play";
 
-export const playerSound = player;
 console.log("Mega parser started");
 
 export interface SortTable {
@@ -16,12 +12,6 @@ export interface SortTable {
   sku: string;
   price: string;
 }
-
-export const audio = [
-  {
-    name: "sahur",
-  },
-];
 
 export const csvWriter = createObjectCsvWriter({
   path: "producs.csv",
@@ -52,8 +42,8 @@ export type Progress = {
 };
 export type ProgressCallback = (progress: Progress) => void;
 
-const names = ["Smart", "Magnit"];
-const parseFunctions = [getSmart, getMagnit];
+const names = ["Magnit", "Smart"];
+const parseFunctions = [getMagnit, getSmart];
 
 async function main() {
   let progress: Progress[] = [];
