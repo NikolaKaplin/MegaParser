@@ -38,8 +38,6 @@ for (let i = 0; i < NUMBER_OF_SQUARES; i++) {
   }
 }
 
-console.log(squares);
-
 const COORDINATES = [
   {
     region: "Республика Адыгея",
@@ -635,7 +633,7 @@ async function fetchStores(coordinates) {
 export async function getAllStores() {
   const allStores = [];
   const spinner = ora(chalk.blue("Fetching regions Magnit...")).start();
-  for (const coords of zones) {
+  for (const coords of COORDINATES) {
     try {
       const stores = await fetchStores(coords);
       stores.forEach((store) => {
