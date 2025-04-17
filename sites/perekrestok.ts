@@ -2,6 +2,7 @@ import axios from "axios";
 import { chromium, Page } from "playwright";
 
 const baseUrl = "https://www.perekrestok.ru/";
+const setStoreUrl = "https://www.perekrestok.ru/api/customer/1.4.1.0/delivery/mode/pickup/";
 const storesUrl = "https://www.perekrestok.ru/api/customer/1.4.1.0/shop/points";
 const categoriesUrl =
   "https://www.perekrestok.ru/api/customer/1.4.1.0/catalog/category/1/full";
@@ -119,8 +120,8 @@ async function getCookies(baseUrl: string, debug: boolean) {
   }
 }
 
-async function getAllStores() {
-  const autchData = await getCookies(baseUrl, true);
+async function getAllStores(accessToken: string, cookieString: string) {
+  // const autchData = await getCookies(baseUrl, true);
   let options = {
     method: "GET",
     maxRedirects: 0,
@@ -128,7 +129,7 @@ async function getAllStores() {
     headers: {
       accept: "application/json, text/plain, */*",
       "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-      auth: `Bearer ${autchData!.accessToken}`,
+      auth: `Bearer ${accessToken}`,
       "cache-control": "no-cache",
       pragma: "no-cache",
       priority: "u=1, i",
@@ -141,15 +142,19 @@ async function getAllStores() {
       "sec-fetch-site": "same-origin",
       "user-agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-      Cookie: `${autchData!.cookieString}`,
+      Cookie: `${cookieString}`,
     },
   };
-  const stores = (await axios.request(options)).data.content.items;
-  console.log(stores);
+  const stores = (await axios.request(options)).data.content.items.map((store) => {
+    storeId: store.id,
+    storeLocation: store.location,
+  });
+  // console.log(stores);
   return stores;
 }
 
-async function getCategories(cookieString: string, accessToken: string) {
+async function getCategories(accessToken: string, cookieString: string) {
+  // const cookies = await getCookies(baseUrl, false)
   const options = {
     method: "GET",
     url: categoriesUrl,
@@ -172,4 +177,52 @@ async function getCategories(cookieString: string, accessToken: string) {
       Cookie: `${cookieString}`,
     },
   };
+
+  let categories = (await axios.request(options)).data.content.children;
+
+  const excludedTitles = ["Вино", "Игристые вина", "Пиво"];
+
+  categories = categories.map((child) => ({
+    title: child.category.title,
+    id: child.category.id
+  })).filter((item) => !excludedTitles.includes(item.title));
+
+  return categories;
+}
+
+async function setStore(storeId: number, accessToken: string, cookieString: string) {
+  const options = {
+    method: "PUT",
+    url: setStoreUrl + storeId,
+    headers: {
+      accept: "application/json, text/plain, */*",
+      "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+      auth: `Bearer ${accessToken}`,
+      "cache-control": "no-cache",
+      pragma: "no-cache",
+      priority: "u=1, i",
+      "sec-ch-ua":
+        '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"Windows"',
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-origin",
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+      Cookie: `${cookieString}`,
+    },
+  };
+  const storeEnable = await axios.request(options)
+  return storeEnable.data
+}
+
+export async function getPerecrestok() {
+  const cookies = await getCookies(baseUrl, true);
+  const stores = await getAllStores(cookies!.accessToken, cookies!.cookieString);
+  const categories = await getCategories(cookies!.accessToken, cookies!.cookieString);
+  for (let i = 0; i < stores.length; i++) {
+    await setStore(stores[i].)
+  }
+
 }
