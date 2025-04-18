@@ -23,6 +23,8 @@ const storesUrl = "https://www.perekrestok.ru/api/customer/1.4.1.0/shop/points";
 const categoriesUrl =
   "https://www.perekrestok.ru/api/customer/1.4.1.0/catalog/category/1/full";
 
+//
+
 async function getCookies(baseUrl: string, debug: boolean) {
   let page: Page;
   let cookies: any[] = [];
@@ -253,6 +255,7 @@ async function getProducts(
   const options = {
     method: "POST",
     url: "https://www.perekrestok.ru/api/customer/1.4.1.0/catalog/product/feed",
+    maxRedirects: 0,
     headers: {
       "content-type": "application/json",
       accept: "application/json, text/plain, */*",
@@ -286,10 +289,6 @@ async function getProducts(
   }));
 }
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export async function getPerecrestok() {
   const cookies = await getCookies(baseUrl, true);
   const stores = await getAllStores(
@@ -300,13 +299,16 @@ export async function getPerecrestok() {
     cookies!.accessToken,
     cookies!.cookieString
   );
+  let rotateCookies = cookies;
+
   for (let i = 0; i < stores.length; i++) {
     const startShop = Date.now();
     const enableStore = await setStore(
       stores[i].storeId,
-      cookies!.accessToken,
-      cookies!.cookieString
+      rotateCookies!.accessToken,
+      rotateCookies!.cookieString
     );
+
     await Promise.all(
       categories.map(async (category) => {
         const products = await getProducts(
@@ -325,23 +327,26 @@ export async function getPerecrestok() {
         await csvWriter.writeRecords(records);
       })
     );
+
     if ((i + 1) % 10 === 0) {
-      console.log("Waiting for 25 seconds after 10 iterations...");
-      await delay(30000);
+      console.log("Cookie rotation...");
+      let success = false;
+      while (!success) {
+        try {
+          rotateCookies = await getCookies(baseUrl, false);
+          success = true; // Если весь код прошёл без ошибки, ставим success в true
+        } catch (error) {
+          console.error(
+            "Ошибка получения cookies. Повторная попытка...",
+            error
+          );
+          // Программа будет оставаться в этом цикле, пока не получит успешно cookies
+        }
+      }
     }
-    console.log(`a store  fetched is ${Date.now() - startShop}ms`);
+
+    console.log(`a store fetched is ${Date.now() - startShop}ms`);
   }
 }
 
-// getPerecrestok();
-
-async function collectionCookie() {
-  let resultArr: any = [];
-  for (let i = 0; i < 10; i++) {
-    const cookieString = await getCookies(baseUrl, false);
-    console.log(cookieString);
-    let result = {};
-  }
-}
-collectionCookie();
-//доделать ротацию cookie
+getPerecrestok();
