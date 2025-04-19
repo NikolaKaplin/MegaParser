@@ -1,8 +1,13 @@
 import axios from "axios";
+import chalk from "chalk";
 import { createObjectCsvWriter } from "csv-writer";
+import { Agent as httpAgent } from "http";
+import { Agent as httpsAgent } from "https";
+import ora from "ora";
 import { chromium, Page } from "playwright";
-// import { csvWriter } from "..";
 
+axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
+axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
 export const csvWriter = createObjectCsvWriter({
   path: "producs.csv",
   header: [
@@ -127,7 +132,7 @@ async function getCookies(baseUrl: string, debug: boolean) {
     const validateCookies = (await axios.request(options)).data;
     if (validateCookies) return { cookieString, accessToken, refreshToken };
   } catch (error) {
-    console.error("Error spsc header, refetching...");
+    // console.error("Error spsc header, refetching...");
     if (error.response) {
       let spscHeader = error.response.headers["set-cookie"]
         .toString()
@@ -222,7 +227,6 @@ async function setStore(
 ) {
   const url = setStoreUrl + storeId;
   const options = {
-    method: "PUT",
     headers: {
       accept: "application/json, text/plain, */*",
       "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -242,8 +246,10 @@ async function setStore(
       Cookie: `${cookieString}`,
     },
   };
-  const storeEnable = await fetch(url, options).then((res) => res.json());
-  console.log(storeEnable);
+  const storeEnable = await axios.put(url, {}, options).then((res) => {
+    return res.data;
+  });
+  // console.log(storeEnable);
   return storeEnable.content.shop;
 }
 
@@ -289,16 +295,24 @@ async function getProducts(
   }));
 }
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function getPerecrestok() {
-  const cookies = await getCookies(baseUrl, true);
+  let spinner = ora(chalk.blue("Fetching cookies Perekrestok...")).start();
+  const cookies = await getCookies(baseUrl, false);
+  spinner.succeed(chalk.green("Cookies fetched successfully!"));
+  spinner = ora(chalk.blue("Fetching stores Perekrestok...")).start();
   const stores = await getAllStores(
     cookies!.accessToken,
     cookies!.cookieString
   );
+  spinner.succeed(chalk.green("Stores fetched successfully!"));
+  spinner = ora(chalk.blue("Fetching categories Perekrestok...")).start();
   const categories = await getCategories(
     cookies!.accessToken,
     cookies!.cookieString
   );
+  spinner.succeed(chalk.green("Categories fetched successfully!"));
   let rotateCookies = cookies;
 
   for (let i = 0; i < stores.length; i++) {
@@ -329,24 +343,23 @@ export async function getPerecrestok() {
     );
 
     if ((i + 1) % 10 === 0) {
-      console.log("Cookie rotation...");
+      spinner = ora(chalk.blue("Rotation cookies...")).start();
       let success = false;
       while (!success) {
         try {
           rotateCookies = await getCookies(baseUrl, false);
-          success = true; // Если весь код прошёл без ошибки, ставим success в true
+          success = true;
+          spinner.succeed(chalk.green("Cookies rotation successfully!"));
         } catch (error) {
-          console.error(
-            "Ошибка получения cookies. Повторная попытка...",
-            error
-          );
-          // Программа будет оставаться в этом цикле, пока не получит успешно cookies
+          console.error("Error rotatio cookies. Retrying...");
         }
       }
     }
 
-    console.log(`a store fetched is ${Date.now() - startShop}ms`);
+    console.log(
+      chalk.greenBright(`Store fetched is ${Date.now() - startShop}ms`)
+    );
   }
+  return;
 }
-
 getPerecrestok();
