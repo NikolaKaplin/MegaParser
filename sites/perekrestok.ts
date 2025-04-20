@@ -295,8 +295,6 @@ async function getProducts(
   }));
 }
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export async function getPerecrestok() {
   let spinner = ora(chalk.blue("Fetching cookies Perekrestok...")).start();
   const cookies = await getCookies(baseUrl, false);
