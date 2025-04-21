@@ -9,7 +9,7 @@ dist
 # code coverage
 coverage
 *.lcov
-
+*.csv
 # logs
 logs
 _.log
@@ -21,7 +21,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .env.test.local
 .env.production.local
 .env.local
-producs.csv
 # caches
 .eslintcache
 .cache
