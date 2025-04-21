@@ -1,4 +1,5 @@
 import axios from "axios";
+import { resolve } from "bun";
 import chalk from "chalk";
 import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
@@ -156,8 +157,10 @@ export async function getDiksi() {
       }));
       await csvWriter.writeRecords(records);
       console.log(i, `shop fetched is ${Date.now() - start}`);
+      await new Promise(resolve => setTimeout(resolve, 1500));
     } catch (error) {
       console.log(chalk.redBright(error));
+      await new Promise(resolve => setTimeout(resolve, 120000));
       continue;
     }
   }
