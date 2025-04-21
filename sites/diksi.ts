@@ -1,4 +1,5 @@
 import axios from "axios";
+import { xml } from "cheerio";
 
 async function getAllStores() {
     const url = 'https://dixy.ru/ajax/ajax.php';
@@ -24,7 +25,10 @@ async function getAllStores() {
     options.body = form;
     const response = await fetch(url, options);
     const data = await response.json();
-    return data;
+    return data.flatMap((shop) => ({
+        id: shop.id,
+        coords: shop.geometry.coordinates.join(','),
+    address: shop.properties.balloonContentBody }));
 }
 
 async function getProducts(shopId: number) {
@@ -59,21 +63,23 @@ async function getProducts(shopId: number) {
 
     return products;
 }
-getProducts(740);
+// getProducts(740);
 
 async function setStore(storeId: number, coords: string, address: string) {
     const url = 'https://dixy.ru/ajax/ajax.php';
     const form = new FormData();
     form.append('action', 'saveStore');
     form.append('isDelivery', 'false');
-    form.append('store_id', '775');
-    form.append('coords', '56.7236190211869,37.52867317768029');
-    form.append('address', 'Талдом, микрорайон Юбилейный, 34А');
+    form.append('store_id', storeId.toString());
+    form.append('coords', coords); // 55.751442,37.615569
+    form.append('address', address); // улица Покровка, 17с1
+
     const options = {
         method: 'POST',
         headers: {
             Accept: '*/*',
             'Accept-Language': 'ru-RU,ru;q=0.9',
+            Connection: 'keep-alive',
             Origin: 'https://dixy.ru',
             Referer: 'https://dixy.ru/',
             'Sec-Fetch-Dest': 'empty',
@@ -85,8 +91,20 @@ async function setStore(storeId: number, coords: string, address: string) {
             'sec-ch-ua-platform': '"Windows"',
         }
     };
+
+    options.body = form;
     const response = await fetch(url, options);
     const data = await response.json();
-    return data // расшифровать jwt
-
+    const shopInfo = JSON.parse(Buffer.from(data.store_info, 'base64').toString('utf-8'));
+    return shopInfo;
 }
+
+export async function getDiksi() {
+    const allStores = await getAllStores();
+    for (let i = 0; i < allStores.length; i++) {
+        const store = await setStore(allStores[i].id, allStores[i].coords, allStores[i].address)
+        const products = await getProducts() // доделать парсинг продуктов и запись в файл
+    }
+}
+
+getAllStores()
