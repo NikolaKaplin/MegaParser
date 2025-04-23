@@ -1,56 +1,33 @@
-import axios from "axios";
+import axios, { Axios, AxiosRequestConfig } from "axios";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
 import * as fs from "fs";
 import * as path from "path";
 import { chromium } from "playwright";
+import { createObjectCsvWriter } from "csv-writer";
 
 // без авторизации информация о всех магазинах отсуствует, используются access и refresh токены, acces токен обновляется каждые 6 минут
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
 
-const categories = [
-  {
-    id: 5,
-    name: "Водка",
-    image: null,
-    icon: null,
-    depth: 3,
-    is_adults: true,
-    is_inout: false,
-    slug: "vodka",
-    children: [],
-  },
-  {
-    id: 153,
-    name: "Коньяк",
-    image: null,
-    icon: null,
-    depth: 3,
-    is_adults: true,
-    is_inout: false,
-    slug: "koniak",
-    children: [],
-  },
-  {
-    id: 6,
-    name: "Ликёро-водочные напитки",
-    image: null,
-    icon: null,
-    depth: 3,
-    is_adults: true,
-    is_inout: false,
-    slug: "likioro-vodochnye-napitki",
-    children: [],
-  },
-];
+const csvWriter = createObjectCsvWriter({
+  path: "chizhik.csv",
+  header: [
+    { id: "date", title: "Дата" },
+    { id: "network", title: "Сеть" },
+    { id: "address", title: "Адрес" },
+    { id: "category", title: "Категория" },
+    { id: "sku", title: "SKU" },
+    { id: "price", title: "Цена" },
+  ],
+  encoding: "utf8",
+});
 
 const jsonFilePath = path.join(__dirname, "../jwt/chizhik.json");
 
 async function updateToken(cookie: string) {
   const jsonString = fs.readFileSync(jsonFilePath, "utf-8");
   const tokens = JSON.parse(jsonString);
-  console.log(tokens.refresh);
   const options = {
     method: "POST",
     url: "https://app.chizhik.club/api/v1/x5id/refresh/",
@@ -78,12 +55,13 @@ async function updateToken(cookie: string) {
     },
   };
   const newTokens = await axios.request(options);
-  console.log(await newTokens.data);
+  console.log(newTokens.data);
   fs.writeFileSync(
     jsonFilePath,
     JSON.stringify(await newTokens.data, null, 2),
     "utf-8"
   );
+  return newTokens.data;
 }
 
 async function getCookie() {
@@ -115,90 +93,110 @@ async function getCookie() {
   await page.reload();
   // await page.waitForTimeout(1000000);
   await browser.close();
-  console.log(cookie);
   return cookie.cookie;
 }
 
-async function getAllStores() {
-  let allShops = [];
-  for (let i = 1; i < 1000; i++) {
-    const options = {
-      method: "GET",
-      url: "https://gw-hardis.x5.ru/st/wp-json/wp/v2/shops",
-      params: { page: i.toString(), per_page: "100" },
-      headers: {
-        accept: "application/json, text/plain, */*",
-        "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-        origin: "https://www.chizhik.club",
-        priority: "u=1, i",
-        referer: "https://www.chizhik.club/",
-        "sec-ch-ua":
-          '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "cross-site",
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-      },
-    };
-    try {
-      const shops = await axios.request(options);
-      shops.data.map((shop) => allShops.push(shop));
-      console.log(i);
-    } catch (error) {
-      console.log(error);
-      break;
-    }
-  }
-  console.log(allShops.length);
-  return allShops;
-}
-
-async function getAllCities(cookie: string) {
-  let options = {
+async function getAllStores(cookie: string, accessToken: string) {
+  const options = {
     method: "GET",
-    url: "https://app.chizhik.club/api/v1/geo/cities/",
-    params: { page: 1 },
+    url: "https://app.chizhik.club/api/v1/shops/",
     headers: {
-      accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      accept: "*/*",
       "accept-language": "ru-RU,ru;q=0.9",
-      "cache-control": "max-age=0",
-      priority: "u=0, i",
+      authorization: `Bearer ${accessToken}`,
+      origin: "https://chizhik.club",
+      priority: "u=1, i",
+      referer: "https://chizhik.club/",
       "sec-ch-ua": '"Not.A/Brand";v="99", "Chromium";v="136"',
       "sec-ch-ua-mobile": "?0",
       "sec-ch-ua-platform": '"Windows"',
-      "sec-fetch-dest": "document",
-      "sec-fetch-mode": "navigate",
-      "sec-fetch-site": "none",
-      "sec-fetch-user": "?1",
-      "upgrade-insecure-requests": "1",
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-site",
       "user-agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
       Cookie: cookie,
     },
   };
-  const allCities: any = [];
-  let cities = await axios.request(options);
-  cities.data.items.map((city) => allCities.push(city));
-  for (let i = 2; i < cities.data.total_pages; i++) {
-    options.params.page = i;
-    cities = await axios.request(options);
-    cities.data.items.map((city) => allCities.push(city));
-  }
-  console.log(allCities.length);
-  return allCities;
+  const shops = await axios.request(options);
+  return shops.data;
+}
+
+async function getProducts(
+  cookie: string,
+  accessToken: string,
+  storeId: number,
+  categoryId: number
+) {
+  const options = {
+    method: "GET",
+    url: "https://app.chizhik.club/api/v1/catalog/products/",
+    params: { shop_id: storeId.toString(), category_id: categoryId.toString() },
+    headers: {
+      accept: "*/*",
+      "accept-language": "ru-RU,ru;q=0.9",
+      authorization: `Bearer ${accessToken}`,
+      origin: "https://chizhik.club",
+      priority: "u=1, i",
+      referer: "https://chizhik.club/",
+      "sec-ch-ua": '"Not.A/Brand";v="99", "Chromium";v="136"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"Windows"',
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-site",
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+      Cookie: cookie,
+    },
+  };
+  const products = await axios.request(options);
+  console.log(products.data);
+  return products.data.items;
 }
 
 export async function getChizhik() {
-  const cookie = await getCookie();
-  updateToken(cookie);
-  // const allCities = getAllCities(cookie!)
-  // for (let i = 0; i < allCities.length; i++) {
+  const categories = [
+    { name: "Водка", id: 5 },
+    { name: "Ликёро-водочные напитки", id: 6 },
+    { name: "Коньяк", id: 153 },
+  ];
 
-  // }
+  const cookie = await getCookie();
+  const token = await updateToken(cookie);
+  const stores = await getAllStores(cookie, token.access);
+
+  for (let i = 0; i < stores.length; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const start = Date.now();
+    const records = await Promise.all(
+      categories.map(async (category) => {
+        const products = await getProducts(
+          cookie,
+          token.access,
+          stores[i].id,
+          category.id
+        );
+        if (!products) return [];
+
+        return products.map((product) => ({
+          date: new Date().toISOString(),
+          network: "Чижик",
+          address: stores[i].name,
+          category: category.name,
+          sku: product.title,
+          price: product.price,
+        }));
+      })
+    );
+
+    const flatRecords = records.flat();
+
+    if (flatRecords.length > 0) {
+      await csvWriter.writeRecords(flatRecords);
+    }
+    console.log(i, `${Date.now() - start}ms`);
+  }
 }
 
 getChizhik();

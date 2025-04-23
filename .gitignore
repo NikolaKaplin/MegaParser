@@ -1,11 +1,10 @@
 # dependencies (bun install)
 node_modules
-
 # output
 out
 dist
 *.tgz
-
+/jwt/
 # code coverage
 coverage
 *.lcov
