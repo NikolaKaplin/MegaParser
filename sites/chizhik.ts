@@ -68,7 +68,7 @@ async function getCookie() {
   const userAgent =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36";
   const browser = await chromium.launch({
-    headless: false,
+    headless: true,
   });
   const context = await browser.newContext({
     userAgent: userAgent,
@@ -151,7 +151,7 @@ async function getProducts(
     },
   };
   const products = await axios.request(options);
-  console.log(products.data);
+  console.log(products.data.count);
   return products.data.items;
 }
 
@@ -162,12 +162,19 @@ export async function getChizhik() {
     { name: "Коньяк", id: 153 },
   ];
 
-  const cookie = await getCookie();
-  const token = await updateToken(cookie);
+  let cookie = await getCookie();
+  let token = await updateToken(cookie);
+
+  // Обновление куки и токена каждые 5 минут
+  setInterval(async () => {
+    cookie = await getCookie();
+    token = await updateToken(cookie);
+  }, 5 * 60 * 1000); // 5 минут в миллисекундах
+
   const stores = await getAllStores(cookie, token.access);
 
   for (let i = 0; i < stores.length; i++) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const start = Date.now();
     const records = await Promise.all(
       categories.map(async (category) => {
