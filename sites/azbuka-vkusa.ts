@@ -23,9 +23,12 @@ async function getCookie() {
   await page.goto(
     "https://av.ru/warp/cache/shopsSpecialOrder?city=msk&short=false"
   );
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(5000);
   await page.reload();
   await browser.close();
   console.log(headers.cookie);
   return headers.cookie;
 }
+getCookie();
+
+//доделать
