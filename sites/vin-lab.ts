@@ -90,7 +90,7 @@ function updateCookie(
 async function getCookie() {
   chromium.use(StealthPlugin());
   const browser = await chromium.launch({
-    headless: false,
+    headless: true,
     // args: ["--disable-blink-features=AutomationControlled"],
   });
   const page = await browser.newPage();
