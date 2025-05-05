@@ -250,44 +250,141 @@ async function getProducts(cookie: string, category: number, page: number) {
 }
 
 export async function getVinlab() {
-  let cookie = await getCookie();
+  let cookie = await getCookie(); // Первоначальное получение куки
   const allStores = await getAllStores();
+
   for (let i = 0; i < allStores.length; i++) {
-    const setStoreParamsInCookies = updateCookie(
-      cookie,
-      allStores[i]!.regionCode,
-      allStores[i]!.storeCode
-    );
-    const start = Date.now();
-    let productsArr: any = [];
-    await Promise.all(
-      categories.map(async (category) => {
-        const index: number = categories.findIndex(
-          (item) => item.category === category.category
+    let retryCount = 0;
+    const maxRetries = 3; // Максимальное количество попыток
+
+    while (retryCount < maxRetries) {
+      try {
+        const setStoreParamsInCookies = updateCookie(
+          cookie,
+          allStores[i]!.regionCode,
+          allStores[i]!.storeCode
         );
-        // console.log("index : ", index);
-        const pages = await getProducts(setStoreParamsInCookies, index, 1);
-        console.log(
-          `detected ${pages.pages} pages in ${categories[index]?.category} category`
+
+        const start = Date.now();
+        let productsArr: any = [];
+
+        await Promise.all(
+          categories.map(async (category) => {
+            const index = categories.findIndex(
+              (item) => item.category === category.category
+            );
+
+            // Запрос продуктов с проверкой на устаревание куки
+            const pages = await getProductsWithCookieRetry(
+              setStoreParamsInCookies,
+              index,
+              1
+            );
+
+            console.log(
+              `Detected ${pages.pages} pages in ${categories[index]?.category} category`
+            );
+
+            for (let j = 1; j < pages.pages; j++) {
+              const products = await getProductsWithCookieRetry(
+                setStoreParamsInCookies,
+                index,
+                j
+              );
+
+              products.products.forEach((product) => {
+                productsArr.push({
+                  date: new Date().toISOString(),
+                  network: "Винлаб",
+                  address: allStores[i]!.storeAddress,
+                  category: category.category,
+                  sku: product.name,
+                  price: product.price
+                    ? product.price.value
+                    : "Цена отсутствует",
+                });
+              });
+            }
+          })
         );
-        for (let j = 1; j < pages.pages; j++) {
-          const products = await getProducts(setStoreParamsInCookies, index, j);
-          products.products.map((product) =>
-            productsArr.push({
-              date: new Date().toISOString(),
-              network: "Вин лаб",
-              address: allStores[i]!.storeAddress,
-              category: category.category,
-              sku: product.name,
-              price: product.price ? product.price.value : "Цена отсуствует",
-            })
-          );
+
+        await csvWriter.writeRecords(productsArr);
+        console.log(`${i} shop fetched in ${Date.now() - start}ms`);
+        break; // Успешно завершили итерацию, выходим из retry-цикла
+      } catch (error) {
+        retryCount++;
+        console.error(
+          `Error in shop ${i}, attempt ${retryCount}:`,
+          error.message
+        );
+
+        if (retryCount >= maxRetries) {
+          console.error(`Max retries reached for shop ${i}, skipping...`);
+          break;
         }
-      })
-    );
-    await csvWriter.writeRecords(productsArr);
-    console.log(`${i} shop fetched as ${Date.now() - start}ms`);
+
+        // Обновляем куки и повторяем попытку
+        cookie = await getCookie();
+        console.log("Cookie refreshed, retrying...");
+      }
+    }
   }
 }
+
+async function getProductsWithCookieRetry(
+  cookie: string,
+  categoryIndex: number,
+  page: number
+) {
+  try {
+    return await getProducts(cookie, categoryIndex, page);
+  } catch (error) {
+    if (error.response?.status === 403 || error.response?.status === 401) {
+      console.log("Cookie expired, refreshing...");
+      throw error; // Перебрасываем ошибку для обработки в основном цикле
+    }
+    throw error;
+  }
+}
+
+// export async function getVinlab() {
+//   let cookie = await getCookie();
+//   const allStores = await getAllStores();
+//   for (let i = 0; i < allStores.length; i++) {
+//     const setStoreParamsInCookies = updateCookie(
+//       cookie,
+//       allStores[i]!.regionCode,
+//       allStores[i]!.storeCode
+//     );
+//     const start = Date.now();
+//     let productsArr: any = [];
+//     await Promise.all(
+//       categories.map(async (category) => {
+//         const index: number = categories.findIndex(
+//           (item) => item.category === category.category
+//         );
+//         const pages = await getProducts(setStoreParamsInCookies, index, 1);
+//         console.log(
+//           `detected ${pages.pages} pages in ${categories[index]?.category} category`
+//         );
+//         for (let j = 1; j < pages.pages; j++) {
+//           const products = await getProducts(setStoreParamsInCookies, index, j);
+//           products.products.map((product) =>
+//             productsArr.push({
+//               date: new Date().toISOString(),
+//               network: "Вин лаб",
+//               address: allStores[i]!.storeAddress,
+//               category: category.category,
+//               sku: product.name,
+//               price: product.price ? product.price.value : "Цена отсуствует",
+//             })
+//           );
+//         }
+//       })
+//     );
+//     await csvWriter.writeRecords(productsArr);
+//     console.log(`${i} shop fetched as ${Date.now() - start}ms`);
+//   }
+// }
 
 getVinlab();
