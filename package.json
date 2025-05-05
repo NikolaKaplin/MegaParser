@@ -11,7 +11,8 @@
     "@types/bun": "latest",
     "@types/cheerio": "^0.22.35",
     "@types/cli-progress": "^3.11.6",
-    "@types/jsonwebtoken": "^9.0.9"
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/puppeteer": "^5.4.7"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -25,6 +26,11 @@
     "csv-writer": "^1.6.0",
     "got": "^14.4.7",
     "ora": "^8.2.0",
+    "playwright": "^1.52.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer": "^24.8.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "socks-proxy-agent": "^8.0.5",
     "sound-play": "^1.1.0",
     "tough-cookie": "^5.1.2",

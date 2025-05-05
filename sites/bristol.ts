@@ -56,7 +56,10 @@ async function getHeaders() {
     headless: false,
     args: ["--disable-blink-features=AutomationControlled"],
   });
-  const context = await browser.newContext();
+  const context = await browser.newContext({
+    geolocation: { longitude: 0, latitude: 0 },
+    permissions: ["geolocation"], // разрешение на геолокацию
+  });
   const page = await context.newPage();
   let headers = {};
   // Слушаем события запросов
