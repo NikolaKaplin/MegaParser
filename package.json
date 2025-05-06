@@ -28,8 +28,6 @@
     "ora": "^8.2.0",
     "playwright": "^1.52.0",
     "playwright-extra": "^4.3.6",
-    "puppeteer": "^24.8.0",
-    "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "socks-proxy-agent": "^8.0.5",
     "sound-play": "^1.1.0",

@@ -2,6 +2,7 @@ import axios, { type AxiosRequestConfig } from "axios";
 import { csvWriter, type ProgressCallback } from "..";
 import ora from "ora";
 import chalk from "chalk";
+
 const API_URL = "https://magnit.ru/webgate/v1/store-search/geo";
 // API не позволяет выудить все магазины разом, поэтому я решил разбить россию на 20 зон, думаю этого хватит чтобы вытащить все
 
