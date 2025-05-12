@@ -5,7 +5,6 @@ import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
 import chalk from "chalk";
-import { resolve } from "path";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -210,3 +209,5 @@ export async function getLenta() {
   }
 }
 getLenta();
+
+// 429 ошибка, to many requests, пока хз как фиксить

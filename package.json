@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@opentf/cli-styles": "^0.15.0",
+    "async-pool": "^0.2.6",
     "axios": "^1.8.4",
     "chalk": "^5.4.1",
     "cheerio": "^1.0.0",
