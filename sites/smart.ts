@@ -1,9 +1,25 @@
 import axios from "axios";
-import { MultiBar } from "cli-progress";
 import ora from "ora";
 import chalk from "chalk";
-import { csvWriter, type ProgressCallback } from "..";
+import { Agent as httpAgent } from "http";
+import { Agent as httpsAgent } from "https";
+import { type ProgressCallback } from "..";
+import { createObjectCsvWriter } from "csv-writer";
 
+axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
+axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
+const csvWriter = createObjectCsvWriter({
+  path: "smart.csv",
+  header: [
+    { id: "date", title: "Дата" },
+    { id: "network", title: "Сеть" },
+    { id: "address", title: "Адрес" },
+    { id: "category", title: "Категория" },
+    { id: "sku", title: "SKU" },
+    { id: "price", title: "Цена" },
+  ],
+  encoding: "utf8",
+});
 const regionsUrl =
   "https://smart.swnn.ru/WS/hs/exchange/getTerritoriesIndividuals/?fromSite";
 

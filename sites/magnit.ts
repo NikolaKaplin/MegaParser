@@ -1,11 +1,27 @@
 import axios, { type AxiosRequestConfig } from "axios";
-import { csvWriter, type ProgressCallback } from "..";
+import { type ProgressCallback } from "..";
 import ora from "ora";
+import { Agent as httpAgent } from "http";
+import { Agent as httpsAgent } from "https";
 import chalk from "chalk";
+import { createObjectCsvWriter } from "csv-writer";
 
+axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
+axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
 const API_URL = "https://magnit.ru/webgate/v1/store-search/geo";
 // API не позволяет выудить все магазины разом, поэтому я решил разбить россию на 20 зон, думаю этого хватит чтобы вытащить все
-
+const csvWriter = createObjectCsvWriter({
+  path: "magnit.csv",
+  header: [
+    { id: "date", title: "Дата" },
+    { id: "network", title: "Сеть" },
+    { id: "address", title: "Адрес" },
+    { id: "category", title: "Категория" },
+    { id: "sku", title: "SKU" },
+    { id: "price", title: "Цена" },
+  ],
+  encoding: "utf8",
+});
 const BOUNDARIES = {
   leftTopLatitude: 81.0, // максимальная северная широта (приблизительно)
   leftTopLongitude: 180.0, // максимальная западная долгота
@@ -736,8 +752,8 @@ export async function getMagnit(pc: ProgressCallback, batchSize: number = 1) {
                         price: Math.floor(product.price),
                       }));
                     })
-                    .catch(() => {
-                      console.log("tum tum tum tum tum tum tum sahur");
+                    .catch((error) => {
+                      console.log("tum tum tum tum tum tum tum sahur", error);
                     })
                 );
               }

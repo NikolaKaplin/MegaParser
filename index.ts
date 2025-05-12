@@ -1,4 +1,4 @@
-import { createObjectCsvWriter } from "csv-writer";
+// import { createObjectCsvWriter } from "csv-writer";
 import { getMagnit } from "./sites/magnit";
 import { getSmart } from "./sites/smart";
 
@@ -13,18 +13,18 @@ export interface SortTable {
   price: string;
 }
 
-export const csvWriter = createObjectCsvWriter({
-  path: "producs.csv",
-  header: [
-    { id: "date", title: "Дата" },
-    { id: "network", title: "Сеть" },
-    { id: "address", title: "Адрес" },
-    { id: "category", title: "Категория" },
-    { id: "sku", title: "SKU" },
-    { id: "price", title: "Цена" },
-  ],
-  encoding: "utf8",
-});
+// export const csvWriter = createObjectCsvWriter({
+//   path: "producs.csv",
+//   header: [
+//     { id: "date", title: "Дата" },
+//     { id: "network", title: "Сеть" },
+//     { id: "address", title: "Адрес" },
+//     { id: "category", title: "Категория" },
+//     { id: "sku", title: "SKU" },
+//     { id: "price", title: "Цена" },
+//   ],
+//   encoding: "utf8",
+// });
 
 // async function StartMegaParser() {
 //   try {
