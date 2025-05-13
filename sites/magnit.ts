@@ -676,9 +676,9 @@ export async function getAllStores() {
   return uniqueStores;
 }
 
-// getMagnit();
+getMagnit();
 
-export async function getMagnit(pc: ProgressCallback, batchSize: number = 1) {
+export async function getMagnit(batchSize: number = 1) {
   const stores = await getAllStores();
   console.log(Date.now() - startTime);
 
@@ -692,88 +692,92 @@ export async function getMagnit(pc: ProgressCallback, batchSize: number = 1) {
   const storesCount = stores.length; // stores.length;
 
   // const storeBar = progressBar.create(storesCount, 0);
-  pc({ task: storesCount });
+  // pc({ task: storesCount });
 
   for (let i = 0; i < Math.ceil(storesCount / batchSize); i++) {
     const batchStart = Date.now();
-    await Promise.all(
-      new Array(batchSize).fill(1).map(async (_, v) => {
-        const store = stores[batchSize * i + v];
+    try {
+      await Promise.all(
+        new Array(batchSize).fill(1).map(async (_, v) => {
+          const store = stores[batchSize * i + v];
 
-        let allRecords: any[] = [];
+          let allRecords: any[] = [];
 
-        let categoryPromises: Promise<void>[] = [];
+          let categoryPromises: Promise<void>[] = [];
 
-        for (let t = 0; t < categories.length; t++) {
-          categoryPromises.push(
-            (async () => {
-              let totalCountProducts = 0;
-              let offset = 0;
+          for (let t = 0; t < categories.length; t++) {
+            categoryPromises.push(
+              (async () => {
+                let totalCountProducts = 0;
+                let offset = 0;
 
-              let optionsFromProducts = {
-                method: "POST",
-                url: "https://magnit.ru/webgate/v2/goods/search",
-                headers: {
-                  "content-type": "application/json",
-                },
-                data: {
-                  sort: { order: "desc", type: "popularity" },
-                  pagination: { limit: 50, offset: offset },
-                  categories: [categories[t]!.code],
-                  includeAdultGoods: true,
-                  storeCode: `${store.code}`,
-                  storeType: "1",
-                  catalogType: "1",
-                },
-              } satisfies AxiosRequestConfig;
+                let optionsFromProducts = {
+                  method: "POST",
+                  url: "https://magnit.ru/webgate/v2/goods/search",
+                  headers: {
+                    "content-type": "application/json",
+                  },
+                  data: {
+                    sort: { order: "desc", type: "popularity" },
+                    pagination: { limit: 50, offset: offset },
+                    categories: [categories[t]!.code],
+                    includeAdultGoods: true,
+                    storeCode: `${store.code}`,
+                    storeType: "1",
+                    catalogType: "1",
+                  },
+                } satisfies AxiosRequestConfig;
 
-              const response = await axios
-                .request(optionsFromProducts)
-                .catch(() => {});
-              totalCountProducts = response.data.pagination.totalCount | 1;
+                const response = await axios
+                  .request(optionsFromProducts)
+                  .catch(() => { });
+                totalCountProducts = response.data.pagination.totalCount | 1;
 
-              const totalCountPages = Math.ceil(totalCountProducts / 50);
-              const fetchPromises = [];
+                const totalCountPages = Math.ceil(totalCountProducts / 50);
+                const fetchPromises = [];
 
-              for (let j = 0; j < totalCountPages; j++) {
-                optionsFromProducts.data.pagination.offset = j * 50;
-                fetchPromises.push(
-                  axios
-                    .request(optionsFromProducts)
-                    .then((response) => {
-                      const products = response.data.items;
+                for (let j = 0; j < totalCountPages; j++) {
+                  optionsFromProducts.data.pagination.offset = j * 50;
+                  fetchPromises.push(
+                    axios
+                      .request(optionsFromProducts)
+                      .then((response) => {
+                        const products = response.data.items;
 
-                      return products.map((product) => ({
-                        date: new Date().toISOString(),
-                        network: "Магнит",
-                        address: store.address,
-                        category: categories[t]!.name,
-                        sku: product.name,
-                        price: Math.floor(product.price),
-                      }));
-                    })
-                    .catch((error) => {
-                      console.log("tum tum tum tum tum tum tum sahur", error);
-                    })
-                );
-              }
+                        return products.map((product) => ({
+                          date: new Date().toISOString(),
+                          network: "Магнит",
+                          address: store.address,
+                          category: categories[t]!.name,
+                          sku: product.name,
+                          price: Math.floor(product.price),
+                        }));
+                      })
+                      .catch((error) => {
+                        console.log("tum tum tum tum tum tum tum sahur", error);
+                      })
+                  );
+                }
+                const recordsArray = await Promise.all(fetchPromises);
+                allRecords.push(...recordsArray.flat().filter((v) => !!v));
+              })()
+            );
+          }
 
-              const recordsArray = await Promise.all(fetchPromises);
-              allRecords.push(...recordsArray.flat().filter((v) => !!v));
-            })()
-          );
-        }
+          await Promise.all(categoryPromises);
 
-        await Promise.all(categoryPromises);
-
-        await csvWriter.writeRecords(allRecords);
-        // storeBar.update(i + 1);
-        pc({ done: i + 1 });
-      })
-    );
-    console.log(
-      `a batch of ${batchSize} is fetched in ${Date.now() - batchStart}ms`
-    );
+          await csvWriter.writeRecords(allRecords);
+          // storeBar.update(i + 1);
+          // pc({ done: i + 1 });
+        })
+      );
+      console.log(
+        `a batch of ${batchSize} is fetched in ${Date.now() - batchStart}ms`
+      );
+    } catch (error) {
+      console.log(chalk.red("skip"))
+      continue;
+    }
   }
 
   // storeBar.stop();

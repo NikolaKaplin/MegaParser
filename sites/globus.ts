@@ -60,6 +60,7 @@ async function getCookie() {
   console.log(headers.cookie.split(" "));
   return headers.cookie;
 }
+
 async function getAllStores() {
   const options = {
     method: "GET",

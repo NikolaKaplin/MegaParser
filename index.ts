@@ -1,6 +1,12 @@
 // import { createObjectCsvWriter } from "csv-writer";
+import { getAshan } from "./sites/!ashan";
+import { getAzbukaVkusa } from "./sites/azbuka-vkusa";
+import { getDiksi } from "./sites/diksi";
 import { getMagnit } from "./sites/magnit";
+import { getMetro } from "./sites/metro";
+import { getPerecrestok } from "./sites/perekrestok";
 import { getSmart } from "./sites/smart";
+import { getSpar } from "./sites/spar";
 
 console.log("Mega parser started");
 
@@ -42,8 +48,8 @@ export type Progress = {
 };
 export type ProgressCallback = (progress: Progress) => void;
 
-const names = ["Magnit", "Smart"];
-const parseFunctions = [getMagnit, getSmart];
+const names = ["Магнит", "Смарт", "Азбука вкуса", "Дикси", "Спар", "Перекресток", "Метро", "Ашан"];
+const parseFunctions = [getMagnit, getSmart, getAzbukaVkusa, getDiksi, getSpar, getPerecrestok, getMetro, getAshan];
 
 async function main() {
   let progress: Progress[] = [];

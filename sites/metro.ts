@@ -1,6 +1,11 @@
 import axios from "axios";
 import chalk from "chalk";
 import { createObjectCsvWriter } from "csv-writer";
+import { ProgressCallback } from "..";
+import { Agent as httpAgent } from "http";
+import { Agent as httpsAgent } from "https";
+axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
+axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
 
 const csvWriter = createObjectCsvWriter({
   path: "metro.csv",
@@ -134,8 +139,9 @@ async function getProducts(storeId: number, page: number) {
   return products;
 }
 
-export async function getMetro() {
+export async function getMetro(pc: ProgressCallback) {
   const allStores = await getAllStores();
+  pc({ task: allStores.length });
   for (let i = 0; i < allStores.length; i++) {
     const totalPagesCount = await getTotalPagesCount(allStores[i].store_id);
     const productsArr: any = [];
@@ -155,7 +161,6 @@ export async function getMetro() {
     }));
     await csvWriter.writeRecords(records);
     console.log(chalk.blue(`store ${i} ${allStores[i].store_id} fetched`));
+    pc({ done: i + 1 });
   }
 }
-
-getMetro();

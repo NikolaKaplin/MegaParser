@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
+import { ProgressCallback } from "..";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -135,8 +136,9 @@ async function setStore(storeId: number, coords: string, address: string) {
   return { shopInfo, data };
 }
 
-export async function getDiksi() {
+export async function getDiksi(pc: ProgressCallback) {
   const allStores = await getAllStores();
+  pc({ task: allStores.length });
   for (let i = 0; i < allStores.length; i++) {
     try {
       const start = Date.now();
@@ -158,6 +160,7 @@ export async function getDiksi() {
       await csvWriter.writeRecords(records);
       console.log(i, `shop fetched is ${Date.now() - start}`);
       await new Promise(resolve => setTimeout(resolve, 1500));
+      pc({ done: i + 1 });
     } catch (error) {
       console.log(chalk.redBright(error));
       await new Promise(resolve => setTimeout(resolve, 120000));
@@ -166,4 +169,5 @@ export async function getDiksi() {
   }
 }
 
-getDiksi();
+
+

@@ -3,7 +3,6 @@ import * as cheerio from "cheerio";
 import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
-import { product } from "puppeteer";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });

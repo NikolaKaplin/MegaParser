@@ -3,6 +3,7 @@ import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
 import { chromium } from "playwright";
+import { ProgressCallback } from "..";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -169,10 +170,11 @@ async function setRegion(cookie: string, region: string) {
   return { status: 400 };
 }
 
-async function getAzbukaVkusa() {
+export async function getAzbukaVkusa(pc: ProgressCallback) {
   const cookies = await getCookie();
   const newCookie = await getNewCookie(cookies);
   const products = await getProducts(newCookie, 0, regions[0]?.code!);
+  pc({ task: regions.length });
   console.log(products.countPages);
   for (let j = 0; j < regions.length; j++) {
     let productsArr: any = [];
@@ -193,7 +195,6 @@ async function getAzbukaVkusa() {
       price: product.totalPrice,
     }));
     await csvWriter.writeRecords(records);
+    pc({ done: j + 1 });
   }
 }
-
-getAzbukaVkusa();

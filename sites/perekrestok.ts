@@ -5,6 +5,7 @@ import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
 import ora from "ora";
 import { chromium, Page } from "playwright";
+import { ProgressCallback } from "..";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -312,7 +313,7 @@ export async function getPerecrestok() {
   );
   spinner.succeed(chalk.green("Categories fetched successfully!"));
   let rotateCookies = cookies;
-
+  // pc({ task: stores.length });
   for (let i = 0; i < stores.length; i++) {
     const startShop = Date.now();
     const enableStore = await setStore(
@@ -357,7 +358,8 @@ export async function getPerecrestok() {
     console.log(
       chalk.greenBright(`Store fetched is ${Date.now() - startShop}ms`)
     );
+    // pc({ done: i + 1 });
   }
   return;
 }
-getPerecrestok();
+getPerecrestok()

@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
+import { ProgressCallback } from "..";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -120,8 +121,9 @@ async function getProducts(storeId: number, page: number) {
     };
 }
 
-export async function getAshan() {
+export async function getAshan(pc: ProgressCallback) {
     const allStores = await getAllStores();
+    pc({ task: allStores.length });
     console.log(allStores.length)
     for (let i = 0; i < allStores.length; i++) {
         try {
@@ -144,13 +146,12 @@ export async function getAshan() {
                     : "Цена отсутствует",
             }))
             await csvWriter.writeRecords(records);
+            pc({ done: i + 1 });
         } catch (error) {
             console.log("ERROR PRINT: ", error)
             continue;
         }
     }
 }
-
-getAshan()
 
 
