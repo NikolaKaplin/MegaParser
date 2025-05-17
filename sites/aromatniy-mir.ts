@@ -8,7 +8,7 @@ axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
 
 const csvWriter = createObjectCsvWriter({
-  path: "gradusi.csv",
+  path: "aromatniy-mir.csv",
   header: [
     { id: "date", title: "Дата" },
     { id: "network", title: "Сеть" },
@@ -235,7 +235,10 @@ export async function getAromatniyMir() {
       const pagesCount = await getProducts(1, categories[j]?.url!);
       for (let p = 0; p < pagesCount.countPages; p++) {
         const products = await getProducts(p, categories[j]?.url!);
-        products.products.map((product) => productsArr.push(product));
+        products.products.map((product) => {
+          console.log(product.price);
+          productsArr.push(product);
+        });
         console.log(`${p} page fetched`);
       }
       const records = productsArr.map((product) => ({

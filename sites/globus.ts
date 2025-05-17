@@ -200,10 +200,10 @@ async function getProducts(pageNum: number, cookie: string) {
   return products;
 }
 
-export async function getGlobus(pc: ProgressCallback) {
+export async function getGlobus() {
   let cookies = await getCookie();
   const allStores = await getAllStores();
-  pc({ task: allStores.length });
+  // pc({ task: allStores.length });
   for (let i = 0; i < allStores.length; i++) {
     try {
       const newCookies = await editCookie(cookies, allStores[i]?.id);
@@ -228,9 +228,10 @@ export async function getGlobus(pc: ProgressCallback) {
       }));
       await csvWriter.writeRecords(records);
       console.log(i);
-      pc({ done: i + 1 });
+      // pc({ done: i + 1 });
     } catch (error) {
       if (error.code == "ECONNRESET") continue;
     }
   }
 }
+getGlobus();

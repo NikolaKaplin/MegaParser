@@ -2,7 +2,7 @@
 import { getAshan } from "./sites/ashan";
 import { getAzbukaVkusa } from "./sites/azbuka-vkusa";
 import { getBristol } from "./sites/bristol";
-import { getDiksi } from "./sites/diksi";
+import { getDiksi } from "./sites/!diksi";
 import { getGlobus } from "./sites/globus";
 import { getLenta } from "./sites/lenta";
 import { getMagnit } from "./sites/magnit";
