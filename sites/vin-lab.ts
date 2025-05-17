@@ -4,6 +4,7 @@ import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
 import { chromium } from "playwright-extra";
+import { ProgressCallback } from "..";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -249,10 +250,10 @@ async function getProducts(cookie: string, category: number, page: number) {
   };
 }
 
-export async function getVinlab() {
+export async function getVinlab(pc: ProgressCallback) {
   let cookie = await getCookie(); // Первоначальное получение куки
   const allStores = await getAllStores();
-
+  pc({ task: allStores.length });
   for (let i = 0; i < allStores.length; i++) {
     let retryCount = 0;
     const maxRetries = 3; // Максимальное количество попыток
@@ -310,6 +311,7 @@ export async function getVinlab() {
 
         await csvWriter.writeRecords(productsArr);
         console.log(`${i} shop fetched in ${Date.now() - start}ms`);
+        pc({ done: i + 1 });
         break; // Успешно завершили итерацию, выходим из retry-цикла
       } catch (error) {
         retryCount++;
@@ -346,45 +348,3 @@ async function getProductsWithCookieRetry(
     throw error;
   }
 }
-
-// export async function getVinlab() {
-//   let cookie = await getCookie();
-//   const allStores = await getAllStores();
-//   for (let i = 0; i < allStores.length; i++) {
-//     const setStoreParamsInCookies = updateCookie(
-//       cookie,
-//       allStores[i]!.regionCode,
-//       allStores[i]!.storeCode
-//     );
-//     const start = Date.now();
-//     let productsArr: any = [];
-//     await Promise.all(
-//       categories.map(async (category) => {
-//         const index: number = categories.findIndex(
-//           (item) => item.category === category.category
-//         );
-//         const pages = await getProducts(setStoreParamsInCookies, index, 1);
-//         console.log(
-//           `detected ${pages.pages} pages in ${categories[index]?.category} category`
-//         );
-//         for (let j = 1; j < pages.pages; j++) {
-//           const products = await getProducts(setStoreParamsInCookies, index, j);
-//           products.products.map((product) =>
-//             productsArr.push({
-//               date: new Date().toISOString(),
-//               network: "Вин лаб",
-//               address: allStores[i]!.storeAddress,
-//               category: category.category,
-//               sku: product.name,
-//               price: product.price ? product.price.value : "Цена отсуствует",
-//             })
-//           );
-//         }
-//       })
-//     );
-//     await csvWriter.writeRecords(productsArr);
-//     console.log(`${i} shop fetched as ${Date.now() - start}ms`);
-//   }
-// }
-
-getVinlab();

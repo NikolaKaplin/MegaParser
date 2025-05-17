@@ -207,3 +207,5 @@ export async function getChizhik() {
 }
 
 getChizhik();
+
+//блокировка

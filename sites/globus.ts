@@ -4,6 +4,7 @@ import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
 import { chromium } from "playwright";
+import { ProgressCallback } from "..";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -199,33 +200,37 @@ async function getProducts(pageNum: number, cookie: string) {
   return products;
 }
 
-export async function getGlobus() {
+export async function getGlobus(pc: ProgressCallback) {
   let cookies = await getCookie();
   const allStores = await getAllStores();
+  pc({ task: allStores.length });
   for (let i = 0; i < allStores.length; i++) {
-    const newCookies = await editCookie(cookies, allStores[i]?.id);
-    const pagesCount = await getPagesCount(newCookies);
-    let productsArr = [];
-    for (let j = 1; j < pagesCount; j++) {
-      const start = Date.now();
-      const products = await getProducts(j, newCookies);
-      products.map((item) => productsArr.push(item));
-      console.log(`${j} page fetched in ${Date.now() - start}`);
+    try {
+      const newCookies = await editCookie(cookies, allStores[i]?.id);
+      const pagesCount = await getPagesCount(newCookies);
+      let productsArr = [];
+      for (let j = 1; j < pagesCount; j++) {
+        const start = Date.now();
+        const products = await getProducts(j, newCookies);
+        products.map((item) => productsArr.push(item));
+        console.log(`${j} page fetched in ${Date.now() - start}`);
+      }
+      const filteredProducts = productsArr.filter((item) =>
+        keywords.some((keyword) => item.name.toLowerCase().includes(keyword))
+      );
+      const records = filteredProducts.map((product) => ({
+        date: new Date().toISOString(),
+        network: "Глобус",
+        address: allStores[i]?.name,
+        category: product.name.split(" ")[0],
+        sku: product.name,
+        price: product.price,
+      }));
+      await csvWriter.writeRecords(records);
+      console.log(i);
+      pc({ done: i + 1 });
+    } catch (error) {
+      if (error.code == "ECONNRESET") continue;
     }
-    const filteredProducts = productsArr.filter((item) =>
-      keywords.some((keyword) => item.name.toLowerCase().includes(keyword))
-    );
-    const records = filteredProducts.map((product) => ({
-      date: new Date().toISOString(),
-      network: "Глобус",
-      address: allStores[i]?.name,
-      category: product.name.split(" ")[0],
-      sku: product.name,
-      price: product.price,
-    }));
-    await csvWriter.writeRecords(records);
-    console.log(i);
   }
 }
-
-getGlobus();

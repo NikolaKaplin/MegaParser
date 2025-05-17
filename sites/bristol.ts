@@ -5,6 +5,7 @@ import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
 import ora from "ora";
 import chalk from "chalk";
+import { ProgressCallback } from "..";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -173,7 +174,7 @@ async function getProducts(
   }
 }
 
-export async function getBristol() {
+export async function getBristol(pc: ProgressCallback) {
   let spinner = ora(chalk.blue("Fetching headers Bristol...")).start();
   let headers = await getHeaders();
   spinner.succeed(chalk.green("Headers fetched successfully!"));
@@ -181,7 +182,7 @@ export async function getBristol() {
   const allShops = await getAllShops(headers);
   spinner.succeed(chalk.green("List shops fetched successfully!"));
   console.log(allShops.length);
-
+  pc({ task: allShops.length });
   for (let i = 0; i < allShops.length; i++) {
     try {
       const start = Date.now();
@@ -242,11 +243,10 @@ export async function getBristol() {
         })
       );
       console.log(chalk.blueBright(`${i} fetched in ${Date.now() - start}ms`));
+      pc({ done: i + 1 });
     } catch (error) {
       continue;
     }
   }
   return;
 }
-
-getBristol();

@@ -21,6 +21,25 @@ const csvWriter = createObjectCsvWriter({
   encoding: "utf8",
 });
 
+type Category = {
+  id: number;
+  name: string;
+};
+const categories: Category[] = [
+  {
+    id: 2359,
+    name: "Коньяк, Бренди",
+  },
+  {
+    id: 2404,
+    name: "Водка, Настойки",
+  },
+  {
+    id: 2351,
+    name: "Крепкие напитки",
+  },
+];
+
 async function getAllStores() {
   let options: AxiosRequestConfig = {
     method: "GET",
@@ -77,10 +96,10 @@ async function getAllStores() {
   return allStores;
 }
 
-async function setStore(storeId: number) {
+async function setStore(sessionId: string, storeId: number) {
   const options = {
     method: "POST",
-    url: "https://gradusi.net/api/rest/v1/geo/warehouses/385/",
+    url: `https://gradusi.net/api/rest/v1/geo/warehouses/${storeId}/`,
     headers: {
       accept: "*/*",
       "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -98,16 +117,23 @@ async function setStore(storeId: number) {
       "user-agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
       "x-csrftoken": "bh1Lem1DEmEA3SZHvV4DhOea4WNttKJJ",
+      cookie: sessionId,
     },
   };
   const response = await axios.request(options);
-  return response.status;
+  const result = response.headers["set-cookie"]![0]?.split(" ")[0];
+  console.log(result);
+  return result;
 }
 
-async function getProducts(pageNum: number) {
+async function getProducts(
+  pageNum: number,
+  categoryId: number,
+  cookie: string
+) {
   const options = {
     method: "GET",
-    url: `https://gradusi.net/catalog/category/2351/?page=${pageNum}`,
+    url: `https://gradusi.net/catalog/category/${categoryId}/?page=${pageNum}`,
     headers: {
       accept:
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -115,7 +141,7 @@ async function getProducts(pageNum: number) {
       "cache-control": "no-cache",
       pragma: "no-cache",
       priority: "u=0, i",
-      referer: "https://gradusi.net/catalog/category/2351/",
+      referer: `https://gradusi.net/catalog/category/${categoryId}/?page/`,
       "sec-ch-ua":
         '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
       "sec-ch-ua-mobile": "?0",
@@ -127,6 +153,7 @@ async function getProducts(pageNum: number) {
       "upgrade-insecure-requests": "1",
       "user-agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+      cookie: cookie,
     },
   };
   const response = await axios.request(options);
@@ -154,10 +181,10 @@ async function getProducts(pageNum: number) {
   return products;
 }
 
-async function getPagesCount() {
+async function getPagesCount(categoryId: number, cookie: string) {
   const options = {
     method: "GET",
-    url: "https://gradusi.net/catalog/category/2351/",
+    url: `https://gradusi.net/catalog/category/${categoryId}/`,
     headers: {
       accept:
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -165,7 +192,7 @@ async function getPagesCount() {
       "cache-control": "no-cache",
       pragma: "no-cache",
       priority: "u=0, i",
-      referer: "https://gradusi.net/catalog/category/2351/",
+      referer: `https://gradusi.net/catalog/category/${categoryId}/`,
       "sec-ch-ua":
         '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
       "sec-ch-ua-mobile": "?0",
@@ -177,6 +204,7 @@ async function getPagesCount() {
       "upgrade-insecure-requests": "1",
       "user-agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+      cookie: cookie,
     },
   };
   const response = await axios.request(options);
@@ -190,31 +218,39 @@ async function getPagesCount() {
 }
 
 export async function getGradusi() {
+  const cookie = await setStore("fef", 715);
   const allStores = await getAllStores();
   for (let i = 0; i < allStores.length; i++) {
+    const store = await setStore(cookie!, allStores[i].storeId);
     const start = Date.now();
-    let productArr: object[] = [];
-    const pagesCount = await getPagesCount();
-    for (let j = 1; j < pagesCount; j++) {
-      const start = Date.now();
-      const products = await getProducts(j);
-      products.map((product) => productArr.push(product));
-      console.log(`page ${j} fetched as ${Date.now() - start}ms`);
-    }
-    let records: any = [];
-    productArr.map((product) =>
-      records.push({
-        date: new Date().toISOString(),
-        network: "Градусы",
-        address: allStores[i]!.storeAddress,
-        category: product.name.split(" ")[0],
-        sku: product.name.toString(),
-        price: product.price,
+    await Promise.all(
+      categories.map(async (category) => {
+        let productArr: object[] = [];
+        const pagesCount = await getPagesCount(category.id, store!);
+        for (let j = 1; j < pagesCount; j++) {
+          const start = Date.now();
+          const products = await getProducts(j, category.id, store!);
+          products.map((product) => productArr.push(product));
+          console.log(`page ${j} fetched as ${Date.now() - start}ms`);
+        }
+        let records: any = [];
+        productArr.map((product) =>
+          records.push({
+            date: new Date().toISOString(),
+            network: "Градусы",
+            address: allStores[i]!.storeAddress,
+            category: product.name.split(" ")[0],
+            sku: product.name.toString(),
+            price: product.price,
+          })
+        );
+        console.log(records);
+        await csvWriter.writeRecords(records);
       })
     );
-    console.log(records);
-    await csvWriter.writeRecords(records);
     console.log(`store ${i} fetched as ${Date.now() - start}ms`);
   }
 }
 getGradusi();
+
+//блокировка

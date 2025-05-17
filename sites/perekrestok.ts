@@ -296,7 +296,7 @@ async function getProducts(
   }));
 }
 
-export async function getPerecrestok() {
+export async function getPerecrestok(pc: ProgressCallback) {
   let spinner = ora(chalk.blue("Fetching cookies Perekrestok...")).start();
   const cookies = await getCookies(baseUrl, false);
   spinner.succeed(chalk.green("Cookies fetched successfully!"));
@@ -313,7 +313,7 @@ export async function getPerecrestok() {
   );
   spinner.succeed(chalk.green("Categories fetched successfully!"));
   let rotateCookies = cookies;
-  // pc({ task: stores.length });
+  pc({ task: stores.length });
   for (let i = 0; i < stores.length; i++) {
     const startShop = Date.now();
     const enableStore = await setStore(
@@ -358,8 +358,7 @@ export async function getPerecrestok() {
     console.log(
       chalk.greenBright(`Store fetched is ${Date.now() - startShop}ms`)
     );
-    // pc({ done: i + 1 });
+    pc({ done: i + 1 });
   }
   return;
 }
-getPerecrestok()

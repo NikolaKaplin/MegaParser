@@ -159,15 +159,12 @@ export async function getDiksi(pc: ProgressCallback) {
       }));
       await csvWriter.writeRecords(records);
       console.log(i, `shop fetched is ${Date.now() - start}`);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       pc({ done: i + 1 });
     } catch (error) {
       console.log(chalk.redBright(error));
-      await new Promise(resolve => setTimeout(resolve, 120000));
+      await new Promise((resolve) => setTimeout(resolve, 120000));
       continue;
     }
   }
 }
-
-
-

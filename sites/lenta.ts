@@ -5,6 +5,7 @@ import { createObjectCsvWriter } from "csv-writer";
 import { Agent as httpAgent } from "http";
 import { Agent as httpsAgent } from "https";
 import chalk from "chalk";
+import { ProgressCallback } from "..";
 
 axios.defaults.httpAgent = new httpAgent({ keepAlive: false });
 axios.defaults.httpsAgent = new httpsAgent({ keepAlive: false });
@@ -172,9 +173,10 @@ async function getProducts(headers: object, categoryId: number, page: number) {
   return products;
 }
 
-export async function getLenta() {
+export async function getLenta(pc: ProgressCallback) {
   let headers = await getHeaders();
   const allStores = await getAllStores();
+  pc({ task: allStores.length });
   for (let i = 0; i < allStores.length; i++) {
     const start = Date.now();
     await Promise.all(
@@ -200,14 +202,18 @@ export async function getLenta() {
         );
       })
     );
-    headers = await getHeaders();
+    headers = Object.entries(await getHeaders()).reduce((acc, [key, value]) => {
+      if (!key.startsWith(":")) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, string>);
     console.log(
       chalk.greenBright(
         `store ${allStores[0].storeAddress} fetched as ${Date.now() - start}`
       )
     );
+    pc({ done: i + 1 });
   }
 }
-getLenta();
-
 // 429 ошибка, to many requests, пока хз как фиксить
