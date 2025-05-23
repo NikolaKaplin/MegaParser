@@ -18,6 +18,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@extra/recaptcha": "^4.2.1-next.587",
     "@opentf/cli-styles": "^0.15.0",
     "async-pool": "^0.2.6",
     "axios": "^1.8.4",
@@ -30,6 +31,7 @@
     "playwright": "^1.52.0",
     "playwright-extra": "^4.3.6",
     "pm2": "^6.0.6",
+    "puppeteer-extra-plugin-recaptcha": "^3.6.8",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "socks-proxy-agent": "^8.0.5",
     "sound-play": "^1.1.0",

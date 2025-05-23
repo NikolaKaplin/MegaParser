@@ -676,8 +676,6 @@ export async function getAllStores() {
   return uniqueStores;
 }
 
-getMagnit();
-
 export async function getMagnit(batchSize: number = 1) {
   const stores = await getAllStores();
   console.log(Date.now() - startTime);
@@ -730,7 +728,7 @@ export async function getMagnit(batchSize: number = 1) {
 
                 const response = await axios
                   .request(optionsFromProducts)
-                  .catch(() => { });
+                  .catch(() => {});
                 totalCountProducts = response.data.pagination.totalCount | 1;
 
                 const totalCountPages = Math.ceil(totalCountProducts / 50);
@@ -775,13 +773,15 @@ export async function getMagnit(batchSize: number = 1) {
         `a batch of ${batchSize} is fetched in ${Date.now() - batchStart}ms`
       );
     } catch (error) {
-      console.log(chalk.red("skip"))
+      console.log(chalk.red("skip"));
       continue;
     }
   }
 
   // storeBar.stop();
 }
+
+getMagnit();
 
 // Последовательный долгий парсинг
 // async function getMagnit() {
